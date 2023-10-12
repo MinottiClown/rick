@@ -1,6 +1,19 @@
 <template>
 <div class="app">
     <h1>Рик и Морти</h1>
+    <div class="page__wrapper">
+        <div 
+            v-for="pageNumber in totalPages" 
+            :key="pageNumber" 
+            class="page"
+            :class="{
+                'current-page': page === pageNumber
+            }"
+            @click="changePage(pageNumber)"
+        >
+            {{ pageNumber }}
+        </div>
+    </div>
     <my-input
         v-model="searchQuery"
         placeholder="Поиск..."
@@ -51,8 +64,8 @@ export default {
             isCardsLoading: false,
             searchQuery: '',
             selectedSort: '',
-            // page: 1,
-            // limit: 20,
+            page: 1,
+            totalPages: 0,
             sortOptions: [
                 {value: 'name', name: 'По имени'},
                 {value: 'status', name: 'По статусу'},
@@ -70,34 +83,30 @@ export default {
         showDialog() {
             this.dialogVisible = true;
         },
+        changePage(pageNumber) {
+            this.page = pageNumber
+            this.loadMoreCards()
+             
+
+        },
         async fetchCards() {
             try {
                 this.isCardsLoading = true;
-                    const response = await axios.get ('https://rickandmortyapi.com/api/character', {
-                        // params: {
-                        //     _page: this.page,
-                        //     _limit: this.limit,
-                        // }
-                    });
+                    const response = await axios.get (`https://rickandmortyapi.com/api/character?page=${this.page}`);
+                    this.totalPages = 5;
                     this.cards = response.data.results;
                     this.isCardsLoading = false;
                     console.log(response)
             }  catch (e) {
-                alert('error')
+                console.log(e)
             }  finally {
 
             }
         },
         async loadMoreCards() {
             try {
-                this.page += 1;
-                    const response = await axios.get ('https://rickandmortyapi.com/api/character', {
-                        // params: {
-                        //     _page: this.page,
-                        //     _limit: this.limit,
-                        // }
-                    });
-                    this.cards = [...this.cards, ...response.data];
+                    const response = await axios.get (`https://rickandmortyapi.com/api/character?page=${this.page}`);
+                    this.cards = response.data.results;
                     this.isCardsLoading = false;
                     console.log(response)
             }  catch (e) {
@@ -107,7 +116,6 @@ export default {
     },
     mounted() {
         this.fetchCards();
-        console.log(this.$refs.observer);
         const options = {
             rootMargin: "0px",
             threshold: 1.0,
@@ -151,5 +159,16 @@ export default {
 .observer{
     height: 30px;
     background: green;
+}
+.page__wrapper{
+    display: flex;
+    margin-top: 15px;
+}
+.page{
+    border: 1px solid black;
+    padding: 10px;
+}
+.current-page{
+    border: 2px solid teal; 
 }
 </style>
